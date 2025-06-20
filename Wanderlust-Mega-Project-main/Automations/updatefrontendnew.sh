@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Set the Instance ID and AWS region
-INSTANCE_ID="i-08a9e983c77f640fd"
-AWS_REGION="us-east-2"  
+INSTANCE_ID="i-069c3e20e17f4b9df"
+AWS_REGION="us-west-2"
 
 # Retrieve the public IP address of the specified EC2 instance
 ipv4_address=$(aws ec2 describe-instances \
