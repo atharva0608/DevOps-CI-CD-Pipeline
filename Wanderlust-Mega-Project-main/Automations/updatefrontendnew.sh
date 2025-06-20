@@ -1,22 +1,35 @@
 #!/bin/bash
 
-# Set the Instance ID and path to the .env file
-INSTANCE_ID="i-030da7d31a1dbbffc"
+# Set the Instance ID and AWS region
+INSTANCE_ID="i-08a9e983c77f640fd"
+AWS_REGION="us-east-2"  
 
 # Retrieve the public IP address of the specified EC2 instance
-ipv4_address=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+ipv4_address=$(aws ec2 describe-instances \
+  --instance-ids "$INSTANCE_ID" \
+  --region "$AWS_REGION" \
+  --query 'Reservations[0].Instances[0].PublicIpAddress' \
+  --output text)
 
 # Path to the .env file
 file_to_find="../frontend/.env.docker"
 
-# Check the current VITE_API_PATH in the .env file
-current_url=$(cat $file_to_find)
+# Exit if file doesn't exist
+if [ ! -f "$file_to_find" ]; then
+  echo "ERROR: .env file not found at $file_to_find"
+  exit 1
+fi
 
-# Update the .env file if the IP address has changed
-if [[ "$current_url" != "VITE_API_PATH=\"http://${ipv4_address}:31100\"" ]]; then
-    if [ -f $file_to_find ]; then
-        sed -i -e "s|VITE_API_PATH.*|VITE_API_PATH=\"http://${ipv4_address}:31100\"|g" $file_to_find
-    else
-        echo "ERROR: File not found."
-    fi
+# Read the current line containing VITE_API_PATH
+current_line=$(grep ^VITE_API_PATH "$file_to_find")
+
+# Desired line with updated IP
+new_line="VITE_API_PATH=\"http://${ipv4_address}:31100\""
+
+# Update if different
+if [[ "$current_line" != "$new_line" ]]; then
+  sed -i -e "s|^VITE_API_PATH.*|$new_line|g" "$file_to_find"
+  echo "Updated VITE_API_PATH to $new_line"
+else
+  echo "VITE_API_PATH is already up to date."
 fi
